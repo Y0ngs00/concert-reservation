@@ -23,21 +23,11 @@ public class Seat {
     }
 
     public void reserve(String reserverName) {
-        if (!isReserved) {
-            this.isReserved = true;
-            System.out.println(seatNumber + "번 좌석이 " + reserverName + "님 이름으로 예약되었습니다.");
-        } else {
-            System.out.println(seatNumber + "번 좌석은 이미 예약되어 있습니다.");
+        if (isReserved) {
+            throw new AlreadyReservedException(seatNumber + "번 좌석은 이미 예약되어 있습니다.");
         }
-    }
-
-    public void reserve(String reserverName, String request) {
-        if (!isReserved) {
-            this.isReserved = true;
-            System.out.println(seatNumber + "번 좌석이 " + reserverName + "님 이름으로 예약되었습니다. 요청사항: " + request);
-        } else {
-            System.out.println(seatNumber + "번 좌석은 이미 예약되어 있습니다.");
-        }
+        this.isReserved = true;
+        System.out.println(seatNumber + "번 좌석이 " + reserverName + "님 이름으로 예약되었습니다.");
     }
 
 }
