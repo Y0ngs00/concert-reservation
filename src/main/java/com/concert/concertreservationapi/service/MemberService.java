@@ -22,6 +22,13 @@ public class MemberService {
 
     public Long register(MemberRequest request) {
 
+        if (memberRepository.existsByLoginId(request.getLoginId())) {
+            throw new IllegalStateException("이미 사용 중인 아이디입니다.");
+        }
+        if (memberRepository.existsByMemberMail(request.getMemberMail())) {
+            throw new IllegalStateException("이미 사용 중인 이메일입니다.");
+        }
+
         Member member = new Member();
         member.setLoginId(request.getLoginId());
         member.setMemberPw(passwordEncoder.encode(request.getMemberPw()));
