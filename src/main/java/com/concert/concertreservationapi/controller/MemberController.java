@@ -22,7 +22,7 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public Long login(@RequestBody LoginRequest request) {
+    public String login(@RequestBody LoginRequest request) {
         return memberService.login(request);
     }
 

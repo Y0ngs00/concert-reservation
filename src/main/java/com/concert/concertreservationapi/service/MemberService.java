@@ -4,6 +4,7 @@ import com.concert.concertreservationapi.dto.LoginRequest;
 import com.concert.concertreservationapi.dto.MemberRequest;
 import com.concert.concertreservationapi.entity.Member;
 import com.concert.concertreservationapi.repository.MemberRepository;
+import com.concert.concertreservationapi.security.JwtProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,14 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
+    public MemberService(MemberRepository memberRepository,
+                         PasswordEncoder passwordEncoder,
+                         JwtProvider jwtProvider) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtProvider = jwtProvider;
     }
 
     public Long register(MemberRequest request) {
@@ -41,7 +46,7 @@ public class MemberService {
         return savedMember.getMemberId();
     }
 
-    public Long login(LoginRequest request) {
+    public String login(LoginRequest request) {
 
         Member member = memberRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
@@ -50,7 +55,7 @@ public class MemberService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        return member.getMemberId();
+        return jwtProvider.createToken(member.getMemberId());
     }
 
 }
