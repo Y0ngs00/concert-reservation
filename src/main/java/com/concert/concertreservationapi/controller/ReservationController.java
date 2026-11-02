@@ -20,7 +20,6 @@ public class ReservationController {
     @PostMapping("/reservations")
     public ReservationResponse reserveSeat(@AuthenticationPrincipal Long memberId,
                                            @RequestBody ReservationRequest request) {
-        request.setMemberId(memberId);
-        return reservationService.reserve(request);
+        return reservationService.reserve(memberId, request);
     }
 }

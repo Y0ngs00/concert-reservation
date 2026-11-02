@@ -27,10 +27,10 @@ public class ReservationService {
         this.reservationRepository = reservationRepository;
     }
 
-    public ReservationResponse reserve(ReservationRequest request) {
+    public ReservationResponse reserve(Long memberId, ReservationRequest request) {
 
         //1. 회원 찾기
-        Member member = memberRepository.findById(request.getMemberId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
         //2. 좌석 찾기
         Seat seat = seatRepository.findById(request.getSeatId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
