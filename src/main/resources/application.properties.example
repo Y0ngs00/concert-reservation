@@ -8,5 +8,5 @@ spring.jpa.show-sql=true
 
 # jwt.secret은 영문 숫자 32자 이상의 무작위 문자열이어야 합니다.
 # CHANGE_ME는 일부러 짧은 값이라 그대로 쓰면 서버가 시작되지 않습니다.
-jwt.secret==CHANGE_ME
+jwt.secret=CHANGE_ME
 jwt.expiration-ms=3600000
