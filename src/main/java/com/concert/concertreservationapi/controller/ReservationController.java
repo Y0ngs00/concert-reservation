@@ -2,8 +2,8 @@ package com.concert.concertreservationapi.controller;
 
 import com.concert.concertreservationapi.dto.ReservationRequest;
 import com.concert.concertreservationapi.dto.ReservationResponse;
-import com.concert.concertreservationapi.entity.Reservation;
 import com.concert.concertreservationapi.service.ReservationService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +18,9 @@ public class ReservationController {
     }
 
     @PostMapping("/reservations")
-    public ReservationResponse reserveSeat(@RequestBody ReservationRequest request) {
+    public ReservationResponse reserveSeat(@AuthenticationPrincipal Long memberId,
+                                           @RequestBody ReservationRequest request) {
+        request.setMemberId(memberId);
         return reservationService.reserve(request);
     }
 }
