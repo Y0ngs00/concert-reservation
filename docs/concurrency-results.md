@@ -7,22 +7,15 @@
 - 측정 설정: spring.jpa.show-sql=false
 - 테스트: ReservationConcurrencyTest (기대: success 1, conflict 99, reservationRows 1)
 
-## 5-0 Before (락 없음, @Transactional 없음)
+## 5-0 Before (락 없음, `@Transactional` 없음)
 | 회차 | success | conflict | other | reservationRows | 본문 시간(ms) |
-
+|---|---|---|---|---|---|
 | 1 | 63 | 37 | 0 | 63 | 1257 |
-
 | 2 | 64 | 36 | 0 | 64 | 1268 |
-
 | 3 | 69 | 31 | 0 | 69 | 1229 |
-
-| 4 | 43 | 57 | 0 | 43 | 1334 |
-
+| 4 | 43 | 57 | 0 | 43 | 1344 |
 | 5 | 43 | 57 | 0 | 43 | 1334 |
-
 | 평균 | 56.4 | 43.6 | 0 | 56.4 | 1286 |
-
-참고(SQL 로그 true, 1회, 측정 제외): 55 / 45 / 0 / 55 / 1463
 
 ### 해석
 - 5회 모두 기대(성공 1)와 달랐고, 성공 건수는 43~69명이었다.
