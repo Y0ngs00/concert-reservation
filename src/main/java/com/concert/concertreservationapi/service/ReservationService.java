@@ -36,7 +36,7 @@ public class ReservationService {
         Member member = memberRepository.findById(memberId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
         //2. 좌석 찾기
-        Seat seat = seatRepository.findById(request.getSeatId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
+        Seat seat = seatRepository.findByIdForUpdate(request.getSeatId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
 
         //3. 이미 예약된 좌석인지 체크
         if (seat.getIsReserved()) {
