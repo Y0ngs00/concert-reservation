@@ -8,7 +8,9 @@ import com.concert.concertreservationapi.entity.Seat;
 import com.concert.concertreservationapi.repository.MemberRepository;
 import com.concert.concertreservationapi.repository.ReservationRepository;
 import com.concert.concertreservationapi.repository.SeatRepository;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -27,6 +29,7 @@ public class ReservationService {
         this.reservationRepository = reservationRepository;
     }
 
+    @Transactional
     public ReservationResponse reserve(Long memberId, ReservationRequest request) {
 
         //1. 회원 찾기
