@@ -97,7 +97,7 @@ public class ReservationConcurrencyTest {
         }
 
         @Test
-        void 같은_좌석에_100명이_동시에_예약화면_1명만_성공해야_하낟() throws InterruptedException{
+        void 같은_좌석에_100명이_동시에_예약화면_1명만_성공해야_한다() throws InterruptedException{
             int threadCount = memberIds.size();
             ReservationRequest request = new ReservationRequest();
             request.setSeatId(seatId);
