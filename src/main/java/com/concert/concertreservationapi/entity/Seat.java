@@ -30,6 +30,9 @@ public class Seat {
     @Column(name = "is_reserved", nullable = false)
     private Boolean isReserved;
 
+    @Version
+    private Long version;
+
     public Seat() {
     }
 
@@ -68,5 +71,7 @@ public class Seat {
     public void setIsReserved(Boolean isReserved) {
         this.isReserved = isReserved;
     }
+
+    public Long getVersion() {return version;}
 
 }
