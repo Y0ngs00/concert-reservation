@@ -1,10 +1,7 @@
 package com.concert.concertreservationapi.concurrency;
 
 import com.concert.concertreservationapi.dto.ReservationRequest;
-import com.concert.concertreservationapi.entity.Concert;
-import com.concert.concertreservationapi.entity.Member;
-import com.concert.concertreservationapi.entity.Seat;
-import com.concert.concertreservationapi.entity.Singer;
+import com.concert.concertreservationapi.entity.*;
 import com.concert.concertreservationapi.repository.*;
 import com.concert.concertreservationapi.service.ReservationService;
 import org.junit.jupiter.api.AfterEach;
@@ -30,7 +27,7 @@ import static org.mockito.Mockito.doThrow;
 class ReservationAtomicityTest {
 
     @Autowired ReservationService reservationService;
-    @Autowired ReservationRepository reservationRepository;
+    @MockitoSpyBean ReservationRepository reservationRepository;
     @MockitoSpyBean SeatRepository seatRepository;
     @Autowired ConcertRepository concertRepository;
     @Autowired SingerRepository singerRepository;
@@ -92,20 +89,22 @@ class ReservationAtomicityTest {
     }
 
     @Test
-    void 좌석_저장이_실패하면_예약도_취소되어야_한다() {
+    void 예약_저장이_실패하면_좌석_상태도_원래대로_돌아와야_한다() {
         assertThat(seatId).isNotNull();
         assertThat(memberId).isNotNull();
 
-        doThrow(new RuntimeException("좌석 저장 실패(테스트용)"))
-                .when(seatRepository).save(any(Seat.class));
+        doThrow(new RuntimeException("예약 저장 실패(테스트용)"))
+                .when(reservationRepository).save(any(Reservation.class));
 
         ReservationRequest request = new ReservationRequest();
         request.setSeatId(seatId);
 
         assertThatThrownBy(() -> reservationService.reserve(memberId, request))
                 .isInstanceOf(RuntimeException.class)
-                .hasStackTraceContaining("좌석 저장 실패(테스트용)");
+                .hasStackTraceContaining("예약 저장 실패(테스트용)");
 
+        Seat seat = seatRepository.findById(seatId).orElseThrow();
+        assertThat(seat.getIsReserved()).isFalse();
         assertThat(reservationRepository.count()).isEqualTo(0);
     }
 
