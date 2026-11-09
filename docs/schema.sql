@@ -58,3 +58,26 @@ ALTER TABLE `seat`
 ALTER TABLE `reservation`
     ADD CONSTRAINT `FK_RESERVATION_MEMBER` FOREIGN KEY (`member_id`) REFERENCES `member` (`member_id`),
     ADD CONSTRAINT `FK_RESERVATION_SEAT` FOREIGN KEY (`seat_id`) REFERENCES `seat` (`seat_id`);
+
+-- =====================================================================
+-- 변경 이력 (위 CREATE TABLE은 최초 설계이고, 아래는 이후 변경입니다)
+-- 적용 대상: 개발 DB(concert_reservation), 테스트 DB(concert_reservation_test)
+-- 실행 전에 대상 스키마를 확인하고, DDL은 백업 후에 실행합니다.
+-- =====================================================================
+
+-- Phase 5-3: 낙관적 락용 버전 열 (JPA @Version)
+ALTER TABLE `seat`
+    ADD COLUMN `version` BIGINT NOT NULL DEFAULT 0;
+
+-- Phase 5-4 (테스트 DB 2026-11-08, 개발 DB 2026-11-09)
+-- 같은 좌석의 RESERVED 예약이 두 건 이상 저장되지 못하게 DB가 막습니다.
+-- MySQL 8.0은 부분 인덱스가 없어서, RESERVED일 때만 seat_id 값을 갖는
+-- 가상 생성 열에 UNIQUE 인덱스를 걸었습니다. CANCELED 행은 NULL이라
+-- 충돌하지 않으므로 취소 후 재예약이 가능합니다.
+ALTER TABLE `reservation`
+    ADD COLUMN `active_seat_id` BIGINT
+        GENERATED ALWAYS AS (CASE WHEN `reservation_status` = 'RESERVED' THEN `seat_id` END) VIRTUAL,
+    ADD UNIQUE INDEX `uk_reservation_active_seat` (`active_seat_id`);
+
+-- 되돌리기(필요할 때만):
+-- ALTER TABLE `reservation` DROP INDEX `uk_reservation_active_seat`, DROP COLUMN `active_seat_id`;
