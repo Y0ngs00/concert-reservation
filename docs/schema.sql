@@ -81,3 +81,12 @@ ALTER TABLE `reservation`
 
 -- 되돌리기(필요할 때만):
 -- ALTER TABLE `reservation` DROP INDEX `uk_reservation_active_seat`, DROP COLUMN `active_seat_id`;
+
+-- Phase 5-5 (테스트 DB, 개발 DB 모두 2026-11-09)
+-- 예약 취소 시각. 취소 전에는 NULL, 취소하면 취소한 시각을 기록합니다.
+-- NULL 허용 열이라 이 열을 모르는 이전 코드도 그대로 동작합니다.
+ALTER TABLE `reservation`
+    ADD COLUMN `canceled_at` DATETIME NULL;
+
+-- 되돌리기(필요할 때만):
+-- ALTER TABLE `reservation` DROP COLUMN `canceled_at`;

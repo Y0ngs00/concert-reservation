@@ -27,6 +27,9 @@ public class Reservation {
     @Column(name = "reservation_status", nullable = false, length = 20)
     private ReservationStatus reservationStatus;
 
+    @Column(name = "canceled_at")
+    private LocalDateTime canceledAt;
+
     public Reservation() {
     }
 
@@ -43,4 +46,6 @@ public class Reservation {
 
     public ReservationStatus getReservationStatus() { return reservationStatus; }
     public void setReservationStatus(ReservationStatus reservationStatus) { this.reservationStatus = reservationStatus; }
+
+    public LocalDateTime getCanceledAt() { return canceledAt; }
 }
