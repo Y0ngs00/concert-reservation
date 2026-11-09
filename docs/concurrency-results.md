@@ -99,3 +99,40 @@
 ### 원자성 테스트 재설계
 - 순서 변경 후 기존 원자성 테스트가 의미를 잃어(항상 통과) 반대 방향으로 교체: 예약 저장이 실패하면 좌석 상태도 롤백되어야 함.
 - `@Transactional`을 잠시 주석 처리하면 실패(Red)하고 복원하면 통과(Green)함을 확인.
+
+## 5-4. DB 수준 중복 예약 방어 (조건부 UNIQUE 인덱스)
+
+### 목적
+애플리케이션 락(낙관적 락)이 어떤 이유로 뚫려도, 같은 좌석에 RESERVED 예약이 두 건 저장되지 못하도록 DB가 마지막으로 막는다.
+
+### 설계
+- 예약 행을 지우지 않고 reservation_status를 CANCELED로 바꾸는 이력 보존형 취소 구조를 유지한다.
+- MySQL 8.0에는 부분 인덱스가 없으므로, reservation_status가 RESERVED일 때만 seat_id 값을 갖는 가상 생성 열 active_seat_id에 UNIQUE 인덱스를 건다.
+- CANCELED 행은 active_seat_id가 NULL이고 UNIQUE 인덱스는 NULL끼리 충돌하지 않으므로, 취소 후 같은 좌석을 다시 예약할 수 있다.
+- 단순 UNIQUE(seat_id)는 취소 후 재예약까지 막으므로 채택하지 않았다.
+
+### 적용 DDL
+(docs/schema.sql 하단 변경 이력 참고)
+
+~~~sql
+ALTER TABLE reservation 
+    ADD COLUMN active_seat_id BIGINT
+        GENERATED ALWAYS AS (CASE WHEN reservation_status = 'RESERVED' THEN seat_id END) VIRTUAL,
+    ADD UNIQUE INDEX uk_reservation_active_seat (active_seat_id);
+~~~
+
+### 검증 (Red, Green)
+
+| 단계 | 상황 | 결과 |
+|---|---|---|
+| Red | DDL 적용 전 테스트 DB에서 ReservationDbGuardTest 실행 | 두 번째 RESERVED 저장이 예외 없이 통과해 `Expecting code to raise a throwable`로 실패 |
+| Green | 테스트 DB에 DDL 적용 후 같은 테스트 실행 | 2건 통과 (중복 RESERVED 거부, 취소 후 재예약 허용) |
+| 회귀 | 전체 테스트 | 6건 통과, 동시성 테스트 결과 1/99/0/1 유지 |
+
+### 개발 DB 기록
+- 2026-11-08: 중복 RESERVED 행 정리 (reservation_id 4, 6 삭제, 8건에서 6건으로), 트랜잭션 안에서 삭제 후 COMMIT
+- 2026-11-09: DB 백업 후 개발 DB에 같은 DDL 적용, SHOW COLUMNS와 SHOW INDEX로 확인
+
+### 남은 과제
+- 중복 저장 시 발생하는 DataIntegrityViolationException을 사용자 메시지로 바꾸는 처리 검토
+- 예약 취소 기능(5-5): 상태 값을 enum으로 바꾸고 취소 API 추가
