@@ -6,6 +6,8 @@ import com.concert.concertreservationapi.entity.Member;
 import com.concert.concertreservationapi.entity.Reservation;
 import com.concert.concertreservationapi.entity.ReservationStatus;
 import com.concert.concertreservationapi.entity.Seat;
+import com.concert.concertreservationapi.exception.ReservationForbiddenException;
+import com.concert.concertreservationapi.exception.ReservationNotFoundException;
 import com.concert.concertreservationapi.repository.MemberRepository;
 import com.concert.concertreservationapi.repository.ReservationRepository;
 import com.concert.concertreservationapi.repository.SeatRepository;
@@ -69,6 +71,38 @@ public class ReservationService {
                 reservation.getReservedAt(),
                 reservation.getReservationStatus().name()
         );
+    }
+
+    @Transactional
+    public ReservationResponse cancel(Long memberId, Long reservationId) {
+        // 1) 예약 조회. 없으면 ReservationNotFoundException("존재하지 않는 예약입니다.")
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("존재하지 않는 예약입니다."));
+
+        // 2) 소유자 확인. 다르면 ReservationForbiddenException("본인의 예약만 취소할 수 있습니다.")
+        if (!reservation.getMember().getMemberId().equals(memberId)) {
+            throw new ReservationForbiddenException("본인의 예약만 취소할 수 있습니다.");
+        }
+
+        // 3) 상태 변경 (이미 취소면 여기서 409용 예외)
+        reservation.cancel(LocalDateTime.now());
+
+        // 4) 좌석 해제
+        Seat seat = reservation.getSeat();
+        seat.setIsReserved(false);
+        seatRepository.save(seat);
+        try {
+            seatRepository.flush();
+        } catch (OptimisticLockingFailureException e) {
+            throw new IllegalStateException("이미 처리 중인 취소 요청입니다.");
+        }
+
+        return new ReservationResponse(
+                reservation.getReservationId(),
+                reservation.getMember().getMemberName(),
+                reservation.getSeat().getSeatNumber(),
+                reservation.getReservedAt(),
+                reservation.getReservationStatus().name());
     }
 
 }

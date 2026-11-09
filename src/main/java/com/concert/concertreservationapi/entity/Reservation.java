@@ -48,4 +48,13 @@ public class Reservation {
     public void setReservationStatus(ReservationStatus reservationStatus) { this.reservationStatus = reservationStatus; }
 
     public LocalDateTime getCanceledAt() { return canceledAt; }
+
+    public void cancel(LocalDateTime now) {
+        if (this.reservationStatus != ReservationStatus.RESERVED) {
+            throw new IllegalStateException("이미 취소된 예약입니다.");
+        }
+        this.reservationStatus = ReservationStatus.CANCELED;
+        this.canceledAt = now;
+    }
+
 }
