@@ -4,6 +4,7 @@ import com.concert.concertreservationapi.dto.ReservationRequest;
 import com.concert.concertreservationapi.dto.ReservationResponse;
 import com.concert.concertreservationapi.entity.Member;
 import com.concert.concertreservationapi.entity.Reservation;
+import com.concert.concertreservationapi.entity.ReservationStatus;
 import com.concert.concertreservationapi.entity.Seat;
 import com.concert.concertreservationapi.repository.MemberRepository;
 import com.concert.concertreservationapi.repository.ReservationRepository;
@@ -58,7 +59,7 @@ public class ReservationService {
         reservation.setMember(member);
         reservation.setSeat(seat);
         reservation.setReservedAt(LocalDateTime.now());
-        reservation.setReservationStatus("RESERVED");
+        reservation.setReservationStatus(ReservationStatus.RESERVED);
         reservationRepository.save(reservation);
 
         return new ReservationResponse(
@@ -66,7 +67,7 @@ public class ReservationService {
                 member.getMemberName(),
                 seat.getSeatNumber(),
                 reservation.getReservedAt(),
-                reservation.getReservationStatus()
+                reservation.getReservationStatus().name()
         );
     }
 

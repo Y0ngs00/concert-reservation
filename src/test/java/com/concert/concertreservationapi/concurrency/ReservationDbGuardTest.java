@@ -88,10 +88,10 @@ class ReservationDbGuardTest {
         Member member = memberRepository.findById(memberId).orElseThrow();
         Seat seat = seatRepository.findById(seatId).orElseThrow();
 
-        reservationRepository.saveAndFlush(newReservation(member, seat, "RESERVED"));
+        reservationRepository.saveAndFlush(newReservation(member, seat, ReservationStatus.RESERVED));
 
         assertThatThrownBy(() ->
-                reservationRepository.saveAndFlush(newReservation(member, seat, "RESERVED")))
+                reservationRepository.saveAndFlush(newReservation(member, seat, ReservationStatus.RESERVED)))
                 .isInstanceOf(DataIntegrityViolationException.class);
         assertThat(reservationRepository.count()).isEqualTo(1);
     }
@@ -101,13 +101,13 @@ class ReservationDbGuardTest {
         Member member = memberRepository.findById(memberId).orElseThrow();
         Seat seat = seatRepository.findById(seatId).orElseThrow();
 
-        reservationRepository.saveAndFlush(newReservation(member, seat, "CANCELED"));
-        reservationRepository.saveAndFlush(newReservation(member, seat, "RESERVED"));
+        reservationRepository.saveAndFlush(newReservation(member, seat, ReservationStatus.CANCELED));
+        reservationRepository.saveAndFlush(newReservation(member, seat, ReservationStatus.RESERVED));
 
         assertThat(reservationRepository.count()).isEqualTo(2);
     }
 
-    private Reservation newReservation(Member member, Seat seat, String status) {
+    private Reservation newReservation(Member member, Seat seat, ReservationStatus status) {
         Reservation r = new Reservation();
         r.setMember(member);
         r.setSeat(seat);
