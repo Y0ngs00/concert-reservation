@@ -4,9 +4,7 @@ import com.concert.concertreservationapi.dto.ReservationRequest;
 import com.concert.concertreservationapi.dto.ReservationResponse;
 import com.concert.concertreservationapi.service.ReservationService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class ReservationController {
@@ -22,4 +20,11 @@ public class ReservationController {
                                            @RequestBody ReservationRequest request) {
         return reservationService.reserve(memberId, request);
     }
+
+    @PatchMapping("/reservations/{reservationId}/cancel")
+    public ReservationResponse cancelReservation(@AuthenticationPrincipal Long memberId,
+                                                 @PathVariable Long reservationId) {
+        return reservationService.cancel(memberId, reservationId);
+    }
+
 }
