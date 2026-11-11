@@ -135,4 +135,50 @@ ALTER TABLE reservation
 
 ### 남은 과제
 - 중복 저장 시 발생하는 DataIntegrityViolationException을 사용자 메시지로 바꾸는 처리 검토
-- 예약 취소 기능(5-5): 상태 값을 enum으로 바꾸고 취소 API 추가
+- 예약 취소 기능(5-5): 완료 (아래 5-5 섹션 참고)
+
+## 5-5 예약 취소 (취소 후 재예약, 동시 취소)
+
+### 목적
+예약 취소 기능을 추가하고, 같은 예약을 동시에 취소해도 **한 번만 취소**되며 좌석과 예약 상태가 어긋나지 않는지 증명한다.
+
+### 설계
+- API: `PATCH /reservations/{reservationId}/cancel` (회원 id는 토큰에서 추출, 본인 예약만 취소)
+- 상태: `ReservationStatus { RESERVED, CANCELED }`, `canceled_at DATETIME NULL` 추가 (이력 보존)
+- 순서: 예약 조회(404) → 소유자 확인(403) → 상태 변경(이미 취소면 409) → 좌석 해제(`flush`로 `@Version` 충돌 감지, 충돌 시 409)
+- 동시성 보호: 좌석 `@Version`(5-3) + 5-4의 DB 유니크 가드(`CANCELED`는 `active_seat_id`가 NULL이라 재예약 허용)
+
+### 응답 규칙과 수동 검증 (Postman, 개발 DB)
+| 상황        | 응답                                    | 결과 |
+|-------------|-----------------------------------------|---|
+| 정상 취소   | 200, `CANCELED`                         | OK |
+| 이미 취소됨 | 409, `이미 취소된 예약입니다.`          | OK (DB의 `canceled_at` 불변 확인) |
+| 없는 예약   | 404                                     | OK |
+| 남의 예약 | 403 `본인의 예약만 취소할 수 있습니다.` | OK (예약 상태 불변 확인) |
+| 토큰 없음 | 403 (스프링 기본 형식)                  | 개선 후보: 401 구분 |
+
+### 테스트
+- `ReservationCancelTest` 5건 (정상, 취소 후 재예약, 남의 예약, 이미 취소, 없는 예약)
+- `ReservationCancelConcurrencyTest` 1건 (20개 스레드가 같은 예약을 동시에 취소)
+- 전체 12건 통과
+
+### 동시 취소 결과 (테스트 DB, 20 스레드)
+| 항목 | 값 |
+|---|---|
+| success | 1 |
+| conflict | 19 |
+| other | 0 |
+| 좌석 version | 정확히 +1 |
+| 소요 시간 | 약 0.5초 (성능 비교용 아님) |
+
+### 변이 확인 (테스트가 진짜로 잡는지 증명)
+- 좌석의 `@Version`을 일시 제거하고 같은 테스트를 실행: `success=10` (expected 1)로 **실패**
+- 복구 후: `success=1`로 통과
+- 처음 작성 때 준비 데이터 실수(좌석을 미예약 상태로 생성)로도 `success=10`이 나옴. **좌석 상태가 실제로 바뀌지 않으면 `@Version` 검사가 일어나지 않는다**는 사실을 확인함.
+
+### 보강 후보 (미적용)
+- 예약에도 `@Version` 추가, 또는 `UPDATE ... WHERE status='RESERVED'`의 영향 행 수로 원자적 취소
+
+### 개발 DB 반영 기록
+- `reservation.canceled_at DATETIME NULL` (11/09 백업 후 적용)
+- 수동 검증 중 개발 DB에 연습 예약 15, 16번(CANCELED 이력)이 남음
