@@ -60,7 +60,6 @@
 
 ## 실행 방법
 
-<!-- 확인 필요: 아래 순서를 새 폴더에서 직접 따라 해 보고 확정할 것 -->
 1. MySQL에 `concert_reservation` 스키마를 만들고 `docs/schema.sql`을 적용한다.
 2. `src/main/resources/application.properties.example`을 같은 폴더에 `application.properties`로 복사하고 DB 계정과 JWT 키를 입력한다(이 파일은 gitignore).
 3. 테스트용 `concert_reservation_test` 스키마를 만들고 같은 `docs/schema.sql`을 적용한다.
