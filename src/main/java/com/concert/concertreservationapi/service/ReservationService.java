@@ -12,6 +12,7 @@ import com.concert.concertreservationapi.repository.MemberRepository;
 import com.concert.concertreservationapi.repository.ReservationRepository;
 import com.concert.concertreservationapi.repository.SeatRepository;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,7 +63,12 @@ public class ReservationService {
         reservation.setSeat(seat);
         reservation.setReservedAt(LocalDateTime.now());
         reservation.setReservationStatus(ReservationStatus.RESERVED);
-        reservationRepository.save(reservation);
+
+        try {
+            reservationRepository.save(reservation);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("이미 예약된 좌석입니다.");
+        }
 
         return new ReservationResponse(
                 reservation.getReservationId(),
