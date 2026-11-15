@@ -217,3 +217,15 @@ ALTER TABLE reservation
 - DB 조건부 UNIQUE가 중복 예약을 막아 데이터는 지켜진다.
 - 1차 방어가 없으면 경쟁 구간의 요청 9건이 DB 중복 키 오류를 그대로 받는다.
 - 따라서 낙관적 락은 응답 품질, UNIQUE는 데이터 무결성을 맡는 이중 방어다.
+
+### 검증: Docker(MySQL 8.0)에서 재현 (2026-11-15)
+
+| 환경 | DB | 전체 테스트 | 동시성 결과 |
+|---|---|---|---|
+| 기존 PC MySQL (포트 3306) | concert_reservation_test | 12개 통과 | success 1, conflict 99, other 0, 예약 1건 |
+| Docker `mysql:8.0` 컨테이너 (포트 3307) | concert_reservation_test | 12개 통과, 실패 0 | success 1, conflict 99, other 0, 예약 1건 |
+
+- `docs/schema.sql` 하나로 컨테이너의 DB를 처음부터 구성해도 같은 구조가 만들어진다.
+- 테스트는 PC에서 실행하고, 접속 대상만 환경변수(`SPRING_DATASOURCE_*`)로 Docker DB(3307)로 바꿨다. 코드와 설정 파일은 수정하지 않았다.
+- 컨테이너의 `Com_insert`가 104로 늘어, 테스트가 실제로 Docker DB를 사용했음을 확인했다.
+- `ReservationDbGuardTest`에서 `uk_reservation_active_seat`의 중복 거부(오류 1062)가 Docker DB에서도 동작했다.
