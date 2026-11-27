@@ -58,7 +58,35 @@
 | `ReservationCancelConcurrencyTest` | 20개 스레드가 같은 예약을 취소하면 1건만 성공 |
 | `TestDbConnectionTest` | 테스트 전용 DB 연결 확인 |
 
-## 실행 방법
+## 실행 방법 (Docker Compose, 권장)
+
+사전 준비: Docker Desktop, 그리고 8080, 3307 포트가 비어 있어야 합니다.
+
+1. 저장소 받기
+   ```
+   git clone https://github.com/Y0ngs00/concert-reservation.git
+   cd concert-reservation
+   ```
+2. 환경변수 파일 만들기: `.env.example`을 복사해 `.env`로 저장하고 `CHANGE_ME` 값을 실제 값으로 바꿉니다.
+   ```
+   copy .env.example .env
+   ```
+    - `DB_ROOT_PASSWORD`: DB root 비밀번호
+    - `JWT_SECRET`: 32자 이상 임의 문자열
+    - `.env`는 저장소에 올리지 않습니다 (`.gitignore` 처리됨)
+3. 실행
+   ```
+   docker compose up -d --build
+   ```
+   DB 컨테이너가 처음 만들어질 때 `docs/schema.sql`이 자동 적용되고, DB가 `healthy`가 된 뒤 앱이 시작됩니다.
+4. 확인: `docker compose ps`에서 db `healthy`, app `running`이면 정상이며 API는 `http://localhost:8080`입니다.
+5. 종료
+   ```
+   docker compose down        # 컨테이너 삭제, 데이터는 유지
+   docker compose down -v     # 데이터(볼륨)까지 삭제
+   ```
+
+## 실행 방법 (IDE에서 직접 실행)
 
 1. MySQL에 `concert_reservation` 스키마를 만들고 `docs/schema.sql`을 적용한다.
 2. `src/main/resources/application.properties.example`을 같은 폴더에 `application.properties`로 복사하고 DB 계정과 JWT 키를 입력한다(이 파일은 gitignore).
@@ -73,7 +101,8 @@
 - 테스트 DB 분리, 동시성 재현 테스트, 원자성 테스트
 - 동시성 제어 5단계: 락 없음, 트랜잭션, 비관적 락, 낙관적 락, DB 가드 (태그 `phase5-0-before` ~ `phase5-4-db-guard`)
 - 예약 취소와 동시 취소 테스트 (태그 `phase5-5-cancel`)
-- 다음 계획: 5단계 마무리, Docker 배포, 문서 정리
+- Docker Compose로 app과 MySQL 실행 구성 완료 (.env로 비밀 분리, named volume으로 데이터 보존 확인)
+- 다음 계획: 백업과 복원 절차 정리, 문서 정리
 
 ## 배운 점과 한계
 
