@@ -35,3 +35,6 @@ build/
 ### 깃 허브에 DB 내용과 개인 내용이 저장되지 않게 ###
 src/main/resources/application.properties
 out/
+
+### Docker Compose secrets ###
+.env

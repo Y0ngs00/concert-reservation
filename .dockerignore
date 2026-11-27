@@ -13,3 +13,6 @@ target/
 docs/
 java-basics/
 *.md
+
+# 5. 비밀 환경변수 파일 (이미지 빌드에 들어가지 않게)
+.env
