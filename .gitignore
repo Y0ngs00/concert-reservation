@@ -39,5 +39,5 @@ out/
 ### Docker Compose secrets ###
 .env
 
-# 6. DB 백업 파일
+### DB backups (개인정보 포함, 커밋 금지) ###
 backups/
